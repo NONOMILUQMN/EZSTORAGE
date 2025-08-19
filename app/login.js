@@ -13,7 +13,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>USER LOGIN gila</Text>
+      <Text style={styles.title}>USER LOGIN luqman manis</Text>
 
       <TextInput
         style={styles.input}
