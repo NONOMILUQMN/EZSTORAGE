@@ -13,7 +13,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>USER LOGIN</Text>
+      <Text style={styles.title}>USER LOGIN gila</Text>
 
       <TextInput
         style={styles.input}
