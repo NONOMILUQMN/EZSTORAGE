@@ -1,36 +1,70 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
-export default function SignUpScreen() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Signup() {
+  const router = useRouter();
+  const [domain, setDomain] = useState("https://your-nextcloud.com"); // change to your server
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSignUp = () => {
-    // TODO: call backend
-    router.replace('/(tabs)/files');
+  const handleSignup = async () => {
+    if (!username || !password) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${domain}/ocs/v1.php/cloud/users`, {
+        method: "POST",
+        headers: {
+          Authorization: "Basic " + btoa("admin:adminpassword"), // replace with admin creds
+          "OCS-APIRequest": "true",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `userid=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Account created! Please log in.");
+        router.replace("/login");
+      } else {
+        Alert.alert("Error", "Failed to create account.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not connect to Nextcloud server");
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>CREATE ACCOUNT</Text>
-
-      <TextInput style={styles.input} placeholder="Full Name" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
-
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>SIGN UP</Text>
+    <View className="flex-1 bg-white p-6 justify-center">
+      <Text className="text-2xl font-bold mb-4">Sign Up</Text>
+      <TextInput
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        className="border rounded-lg p-3 mb-3"
+      />
+      <TextInput
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        className="border rounded-lg p-3 mb-3"
+      />
+      <TouchableOpacity
+        onPress={handleSignup}
+        className="bg-green-600 py-3 rounded-lg"
+      >
+        <Text className="text-white text-center font-semibold">Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#1A2D5A' },
-  title: { fontSize: 24, color: '#FFF', textAlign: 'center', marginBottom: 32 },
-  input: { backgroundColor: '#FFF', padding: 10, borderRadius: 8, marginBottom: 12 },
-  button: { backgroundColor: '#4B2EF5', padding: 12, borderRadius: 8, marginTop: 20 },
-  buttonText: { color: '#FFF', textAlign: 'center', fontWeight: 'bold' }
-});

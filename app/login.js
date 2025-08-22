@@ -1,45 +1,77 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login() {
+  const router = useRouter();
+  const [domain, setDomain] = useState("https://your-nextcloud.com"); // change to your Nextcloud server
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // TODO: authenticate user
-    router.replace('/(tabs)/files');
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert("Error", "Please enter username and password");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${domain}/ocs/v1.php/cloud/users/${username}`, {
+        method: "GET",
+        headers: {
+          Authorization: "Basic " + btoa(username + ":" + password),
+          "OCS-APIRequest": "true",
+        },
+      });
+
+      if (response.ok) {
+        await AsyncStorage.setItem("domain", domain);
+        await AsyncStorage.setItem("username", username);
+        await AsyncStorage.setItem("password", password);
+        router.replace("/user-dashboard");
+      } else {
+        Alert.alert("Error", "Invalid username or password");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not connect to Nextcloud server");
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>USER LOGIN luqman manis</Text>
-
+    <View className="flex-1 bg-white p-6 justify-center">
+      <Text className="text-2xl font-bold mb-4">User Login</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        className="border rounded-lg p-3 mb-3"
       />
       <TextInput
-        style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        className="border rounded-lg p-3 mb-3"
       />
+      <TouchableOpacity
+        onPress={handleLogin}
+        className="bg-blue-600 py-3 rounded-lg"
+      >
+        <Text className="text-white text-center font-semibold">Login</Text>
+      </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>LOGIN</Text>
+      <TouchableOpacity
+        onPress={() => router.push("/signup")}
+        className="mt-4"
+      >
+        <Text className="text-blue-600 text-center">Don’t have an account? Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#1A2D5A' },
-  title: { fontSize: 24, color: '#FFF', textAlign: 'center', marginBottom: 32 },
-  input: { backgroundColor: '#FFF', padding: 10, borderRadius: 8, marginBottom: 12 },
-  button: { backgroundColor: '#4B2EF5', padding: 12, borderRadius: 8, marginTop: 20 },
-  buttonText: { color: '#FFF', textAlign: 'center', fontWeight: 'bold' }
-});

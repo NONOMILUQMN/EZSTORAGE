@@ -1,27 +1,54 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+// app/(tabs)/_layout.js
+import { Tabs } from "expo-router";
+import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function TabsLayout() {
+export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#4B2EF5',
-        tabBarStyle: { backgroundColor: '#1A2D5A' }
-      }}
-    >
+    <Tabs screenOptions={{ headerShown: false }}>
       <Tabs.Screen
-        name="files"
+        name="login"
         options={{
-          title: 'Files',
-          tabBarIcon: ({ color, size }) => <Ionicons name="folder" size={size} color={color} />
+          title: "Login",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="log-in-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="upload"
+        name="signup"
         options={{
-          title: 'Upload',
-          tabBarIcon: ({ color, size }) => <Ionicons name="cloud-upload" size={size} color={color} />
+          title: "Signup",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-add-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="user-dashboard"
+        options={{
+          title: "User",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin-login"
+        options={{
+          title: "Admin Login",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="lock-closed-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin-dashboard"
+        options={{
+          title: "Admin",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

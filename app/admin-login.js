@@ -1,48 +1,71 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { router } from 'expo-router';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const [domain, setDomain] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleAdminLogin = () => {
-    if (email === 'admin@ezstorage.com' && password === 'admin123') {
-      router.replace('/(tabs)/files');
-    } else {
-      Alert.alert('Invalid', 'Admin credentials are incorrect');
+  const handleLogin = async () => {
+    if (!domain || !username || !password) {
+      Alert.alert("Error", "All fields are required.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${domain}/ocs/v1.php/cloud/users`, {
+        method: "GET",
+        headers: {
+          Authorization: "Basic " + btoa(username + ":" + password),
+          "OCS-APIRequest": "true",
+        },
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Admin login successful!");
+        router.replace("/admin-dashboard"); // ✅ Redirect to admin dashboard
+      } else {
+        Alert.alert("Login Failed", "Invalid admin credentials.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not connect to server.");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>ADMIN LOGIN</Text>
+    <View className="flex-1 justify-center p-6 bg-white">
+      <Text className="text-3xl font-bold mb-6 text-center">Admin Login</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Admin Email"
-        value={email}
-        onChangeText={setEmail}
+        placeholder="Server Domain (e.g. https://storage.projectpal.online)"
+        value={domain}
+        onChangeText={setDomain}
+        className="border rounded-xl p-3 mb-4"
       />
+
       <TextInput
-        style={styles.input}
+        placeholder="Admin Username"
+        value={username}
+        onChangeText={setUsername}
+        className="border rounded-xl p-3 mb-4"
+      />
+
+      <TextInput
         placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        className="border rounded-xl p-3 mb-6"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleAdminLogin}>
-        <Text style={styles.buttonText}>LOGIN</Text>
+      <TouchableOpacity
+        onPress={handleLogin}
+        className="bg-purple-600 py-3 rounded-xl"
+      >
+        <Text className="text-white text-center font-semibold">Login as Admin</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#1A2D5A' },
-  title: { fontSize: 24, color: '#FFF', textAlign: 'center', marginBottom: 32 },
-  input: { backgroundColor: '#FFF', padding: 10, borderRadius: 8, marginBottom: 12 },
-  button: { backgroundColor: '#4B2EF5', padding: 12, borderRadius: 8, marginTop: 20 },
-  buttonText: { color: '#FFF', textAlign: 'center', fontWeight: 'bold' }
-});
