@@ -1,71 +1,121 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
 
-export default function AdminLogin() {
-  const router = useRouter();
+export default function AdminLogin({ navigation }) {
   const [domain, setDomain] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
     if (!domain || !username || !password) {
-      Alert.alert("Error", "All fields are required.");
+      Alert.alert("Error", "Please enter domain, username, and password");
       return;
     }
 
     try {
-      const response = await fetch(`${domain}/ocs/v1.php/cloud/users`, {
-        method: "GET",
-        headers: {
-          Authorization: "Basic " + btoa(username + ":" + password),
-          "OCS-APIRequest": "true",
-        },
-      });
+      // Clean up domain (remove trailing / if any)
+      let cleanDomain = domain.endsWith("/")
+        ? domain.slice(0, -1)
+        : domain;
+
+      const response = await fetch(
+        `${cleanDomain}/remote.php/webdav/`,
+        {
+          method: "PROPFIND",
+          headers: {
+            Authorization:
+              "Basic " + btoa(username + ":" + password),
+          },
+        }
+      );
 
       if (response.ok) {
-        Alert.alert("Success", "Admin login successful!");
-        router.replace("/admin-dashboard"); // ✅ Redirect to admin dashboard
+        Alert.alert("Success", "Login successful!");
+        navigation.navigate("AdminDashboard", {
+          domain: cleanDomain,
+          username,
+          password,
+        });
       } else {
-        Alert.alert("Login Failed", "Invalid admin credentials.");
+        Alert.alert("Login Failed", "Invalid domain or credentials");
       }
     } catch (error) {
-      Alert.alert("Error", "Could not connect to server.");
+      console.error(error);
+      Alert.alert("Error", "Could not connect to server");
     }
   };
 
   return (
-    <View className="flex-1 justify-center p-6 bg-white">
-      <Text className="text-3xl font-bold mb-6 text-center">Admin Login</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Admin Login</Text>
 
       <TextInput
-        placeholder="Server Domain (e.g. https://storage.projectpal.online)"
+        style={styles.input}
+        placeholder="Enter Nextcloud Domain (https://example.com/nextcloud)"
         value={domain}
         onChangeText={setDomain}
-        className="border rounded-xl p-3 mb-4"
       />
 
       <TextInput
-        placeholder="Admin Username"
+        style={styles.input}
+        placeholder="Enter Username"
         value={username}
         onChangeText={setUsername}
-        className="border rounded-xl p-3 mb-4"
       />
 
       <TextInput
-        placeholder="Password"
+        style={styles.input}
+        placeholder="Enter Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        className="border rounded-xl p-3 mb-6"
       />
 
-      <TouchableOpacity
-        onPress={handleLogin}
-        className="bg-purple-600 py-3 rounded-xl"
-      >
-        <Text className="text-white text-center font-semibold">Login as Admin</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  input: {
+    height: 50,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "white",
+  },
+  button: {
+    backgroundColor: "#0078D4",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
