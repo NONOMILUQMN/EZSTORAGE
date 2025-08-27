@@ -1,121 +1,57 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { useState, useContext } from "react";
+import { View, TextInput, Button, Text } from "react-native";
+import { useRouter } from "expo-router";
+import { loginUser, checkNextcloudConnection } from "../lib/nextcloudClient";
+import { AuthContext } from "../context/AuthContext";
 
-export default function AdminLogin({ navigation }) {
-  const [domain, setDomain] = useState("");
+export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const { login } = useContext(AuthContext);
+  const router = useRouter();
 
   const handleLogin = async () => {
-    if (!domain || !username || !password) {
-      Alert.alert("Error", "Please enter domain, username, and password");
-      return;
-    }
-
     try {
-      // Clean up domain (remove trailing / if any)
-      let cleanDomain = domain.endsWith("/")
-        ? domain.slice(0, -1)
-        : domain;
-
-      const response = await fetch(
-        `${cleanDomain}/remote.php/webdav/`,
-        {
-          method: "PROPFIND",
-          headers: {
-            Authorization:
-              "Basic " + btoa(username + ":" + password),
-          },
-        }
-      );
-
-      if (response.ok) {
-        Alert.alert("Success", "Login successful!");
-        navigation.navigate("AdminDashboard", {
-          domain: cleanDomain,
-          username,
-          password,
-        });
-      } else {
-        Alert.alert("Login Failed", "Invalid domain or credentials");
+      // ✅ Step 1: Check Nextcloud server
+      const health = await checkNextcloudConnection();
+      if (!health.success) {
+        setError("Nextcloud server unreachable. Please try again.");
+        return;
       }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Could not connect to server");
+
+      // ✅ Step 2: Try logging in
+      const success = await loginUser(username, password);
+      if (success) {
+        login(username, password, "admin"); // store in context
+        router.push("/admin-dashboard"); // go to dashboard
+      } else {
+        setError("Invalid admin credentials");
+      }
+    } catch (err) {
+      setError("Invalid admin credentials");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Admin Login</Text>
-
+    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+      <Text style={{ fontSize: 22, marginBottom: 20 }}>Admin Login</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Enter Nextcloud Domain (https://example.com/nextcloud)"
-        value={domain}
-        onChangeText={setDomain}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Username"
+        placeholder="Admin Username"
         value={username}
         onChangeText={setUsername}
+        autoCapitalize="none"
+        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
-
       <TextInput
-        style={styles.input}
-        placeholder="Enter Password"
+        placeholder="Admin Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        style={{ borderWidth: 1, padding: 10, marginBottom: 10 }}
       />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
+      <Button title="Login" onPress={handleLogin} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: "white",
-  },
-  button: {
-    backgroundColor: "#0078D4",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
