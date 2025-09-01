@@ -1,63 +1,63 @@
-import React, { useState, useContext } from "react";
-import { View, Text, TextInput, Button, Alert, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { loginUser } from "../lib/nextcloudClient";
-import { AuthContext } from "../context/AuthContext";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 
 export default function UserLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-  const { setUser } = useContext(AuthContext);
-
-  const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert("Error", "Please enter username and password");
-      return;
-    }
-
-    try {
-      const data = await loginUser(username, password);
-
-      // ✅ update context
-      setUser({ username });
-
-      // ✅ go to user-dashboard
-      router.push("/user-dashboard");
-    } catch (err) {
-      Alert.alert("Login Failed", err.message || "Invalid credentials");
-    }
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>User Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
+      
+      <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#888" />
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888"
         secureTextEntry
-        value={password}
-        onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
+
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 22, marginBottom: 20, textAlign: "center" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffe6f0",
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 30,
+    color: "#d63384",
+  },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
+    width: "100%",
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
     marginBottom: 15,
-    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#f8c1d8",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  button: {
+    backgroundColor: "#ff4d94",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    width: "100%",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
